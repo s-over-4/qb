@@ -8,11 +8,15 @@ NICK = 'qb'             # nick that the bot will assume when connecting to a roo
 DB_NAME = 'quotes.db'   # name that the quote database will be read from
 
 LONG_HELP = (           # long help message
-    '/me preforms actions'
+    'a quote bot by @c+1\n'
+    'commands:\n'
+    '   !quote - quote the parent message\n'
+    '   !quote "message" @user - attribute a quote to a specified user\n'
+    '   !list @qb - list quotes\n'
 )
 
 SHORT_HELP = (          # short help message
-    '/me preforms actions'
+    'a quote bot'
 )
 
 
@@ -22,11 +26,41 @@ SHORT_HELP = (          # short help message
 con = sqlite3.connect(DB_NAME, check_same_thread=False)
 cur = con.cursor()
 
-cur.execute('CREATE TABLE IF NOT EXISTS quote (id, name, content, date)')
+cur.execute('CREATE TABLE IF NOT EXISTS quotes (q_id, date, room, content, msg_id, usr_nick, usr_id, edited)')
 
 
 
 # ===== command functions ===== #
+
+# !quote - quote parent message
+# regex: ^!quote$
+def quote_parent(match, meta):
+    # === get parent message id === #
+    parent = meta['msg'].parent
+
+    # ==+ api call for parent message === #
+    packet = {'type': 'get-message', 'data': {'id': parent}}
+    basebot.BaseBot.send_raw( self=meta['self'], obj=packet, retry=True )
+    parent_data = basebot.BaseBot.recv_raw( self=meta['self'], retry=True )
+    
+    # === check if there is a parent message === #
+    if 'error' in parent_data: meta['reply']('error: ' + parent_data['error']); return
+    content = parent_data['data']['content']
+    meta['reply'](content)
+
+    # === create query === #
+    # q_id, date, room, msg_content, msg_id, usr_nick, usr_id, edited
+    q_id = (cur.execute('SELECT MAX(q_id) FROM quotes').fetchall())[0]
+    meta['reply']('q_id:' + str(q_id))
+    
+
+
+# !list - list quotes
+# regex: ^!list\s+@(\S+)$
+def list(match, meta):
+    res = cur.execute('SELECT content FROM quote')
+    meta['reply'](str(res.fetchall()))
+
 
 # !test_the
 # regex: ^!test_the$
@@ -53,7 +87,9 @@ def maybe_die(match, meta):
 # regexes to which the bot will respond
 regexes = {
     r'^!kill\s+@(\S+)\s*$': maybe_die,
-    r'^!test_the$': test_the
+    r'^!test_the$': test_the,
+    r'^!list\s+@(\S+)$': list,
+    r'^!quote$': quote_parent
 }
 
 
