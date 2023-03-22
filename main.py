@@ -23,10 +23,27 @@ SHORT_HELP = (          # short help message
 
 # ===== setup database ===== #
 
+queries = {
+    'init_db': (
+        'CREATE TABLE IF NOT EXISTS quotes('
+        '   q_id INTEGER PRIMARY KEY,'          # the id of the quote in the database
+        '   q_time INTEGER NOT NULL,'           # the time at which the quote was recorded; epoch timestamp
+        '   q_content TEXT NOT NULL,'           # the quote content
+        '   q_author TEXT NOT NULL,'            # the quote author
+        '   euph_room TEXT,'                    # the room on euphoria.io where the quote was recorded
+        '   euph_id TEXT,'                      # the id of the message on euphoria.io in the specified room
+        '   platform TEXT,'                     # the platform the quote was transcribed from
+        '   edited NUMERIC'                     # whether any part of the quote has been edited after initial transcription
+        ')'
+    )
+}
+
+
+
 con = sqlite3.connect(DB_NAME, check_same_thread=False)
 cur = con.cursor()
 
-cur.execute('CREATE TABLE IF NOT EXISTS quotes (q_id, date, room, content, msg_id, usr_nick, usr_id, edited)')
+cur.execute(queries['init_db'], )
 
 
 
@@ -58,7 +75,7 @@ def quote_parent(match, meta):
 # !list - list quotes
 # regex: ^!list\s+@(\S+)$
 def list(match, meta):
-    res = cur.execute('SELECT content FROM quote')
+    res = cur.execute('SELECT q_content FROM quotes')
     meta['reply'](str(res.fetchall()))
 
 
