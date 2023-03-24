@@ -1,12 +1,14 @@
-__version__ = "2.0"
+# the euphoria bot that collects quotes for the database
+__version__ = '2.0'
 
+# packages - must be installed
 import basebot
 import sqlite3
 from time import time
 from string import Template
 
 
-
+# TODO: move these into a config file
 # ===== quick config ===== #
 #                          #
 
@@ -28,11 +30,9 @@ DB_NAME = 'quotes.db'           # name of the file that the quote database will 
 # ===== end quick config ===== #
 
 
-
-
-
-# ===== setup database ===== #
-#                            #
+# TODO: move this into a module
+# ===== set up database ===== #
+#                             #
 
 queries = {
     'init_db': (
@@ -72,8 +72,8 @@ cur = con.cursor()
 
 cur.execute(queries['init_db'])
 
-#                                #
-# ===== end setup database ===== #
+#                                 #
+# ===== end set up database ===== #
 
 
 
